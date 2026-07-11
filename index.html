@@ -20,6 +20,7 @@
     <nav id="primary-nav">
         <a href="#manifest">Manifest</a>
         <a href="#join">Dołącz</a>
+        <a href="#hierarchy">Hierarchia</a>
         <a href="#shop">Sklep</a>
         <a href="#gallery">Galeria</a>
         <a href="#rules">Regulamin</a>
@@ -85,21 +86,40 @@
     </div>
 </section>
 
-<section id="shop" class="section">
+<section id="hierarchy" class="section">
+    <span class="eyebrow">Struktura</span>
+    <h2>Hierarchia Rodziny</h2>
+    <p class="lede">Skład rodziny na Majestic RP. W trybie edycji przeciągaj osoby między rangami.</p>
+
+    <button type="button" id="editToggle" class="edit-toggle" aria-pressed="false">
+        <span class="lock-icon" aria-hidden="true">🔒</span>
+        <span class="edit-toggle-label">Edytuj hierarchię</span>
+    </button>
+
+    <div id="addMemberBar" class="add-member-bar" hidden>
+        <input type="text" id="newMemberName" placeholder="Imię / pseudo" maxlength="40">
+        <select id="newMemberRank"></select>
+        <button type="button" id="addMemberBtn">Dodaj</button>
+    </div>
+
+    <div id="hierarchyBoard" class="hierarchy-board"></div>
+</section>
+
+<section id="shop" class="section dark">
     <span class="eyebrow">Sklep</span>
     <h2>Usługi rodziny</h2>
     <div class="shop">
         <div class="product">
-            <span class="eyebrow">Usługa Maki</span>
+            <span class="eyebrow">Usługa Proroka</span>
             <h3>Sesja indywidualna</h3>
-            <span class="price">20 zł</span>
+            <span class="price">499 zł</span>
             <p>Prywatna konsultacja z liderem rodziny — pozycja, styl i ścieżka rozwoju postaci dopasowane pod Twoją historię w Majestic RP.</p>
             <button type="button" id="buyBtn">Umów sesję</button>
         </div>
     </div>
 </section>
 
-<section id="gallery" class="section dark">
+<section id="gallery" class="section">
     <span class="eyebrow">Galeria</span>
     <h2>Galeria</h2>
     <div class="gallery">
@@ -109,7 +129,7 @@
     </div>
 </section>
 
-<section id="rules" class="section">
+<section id="rules" class="section dark">
     <span class="eyebrow">Zasady</span>
     <h2>Kodeks Rodziny</h2>
     <div class="rules">

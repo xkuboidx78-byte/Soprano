@@ -51,14 +51,17 @@ if ("IntersectionObserver" in window) {
 (() => {
     const EDIT_PASSWORD = "soprano"; // porównanie bez uwzględniania wielkości liter
 
-    // Rangi od najwyższej do najniższej + skład startowy — podmień pod swoją rodzinę
+    // Rangi od najniższej do najwyższej + skład startowy — podmień pod swoją rodzinę
     const ranks = [
-        { id: "boss", label: "Boss", members: ["Tony"] },
-        { id: "underboss", label: "Underboss", members: ["Silvio"] },
-        { id: "consigliere", label: "Consigliere", members: [] },
-        { id: "capo", label: "Capo", members: ["Paulie", "Christopher"] },
-        { id: "soldier", label: "Żołnierz", members: [] },
-        { id: "recruit", label: "Rekrut", members: [] },
+        { id: "novizio", label: "Novizio", sub: "Nowicjusz", members: [] },
+        { id: "membro", label: "Membro", sub: "Członek", members: [] },
+        { id: "membro-permanente", label: "Membro Permanente", sub: "Stały członek", members: [] },
+        { id: "soldato", label: "Soldato", sub: "Żołnierz", members: ["Christopher"] },
+        { id: "caporegime", label: "Caporegime", sub: "Dowódca", members: ["Paulie"] },
+        { id: "consigliere", label: "Consigliere", sub: "Doradca", members: [] },
+        { id: "braccio-destro", label: "Braccio Destro", sub: "Prawa ręka szefa", members: ["Silvio"] },
+        { id: "vice-capo", label: "Vice Capo", sub: "Zastępca szefa", members: [] },
+        { id: "capo", label: "Capo", sub: "Szef", members: ["Tony"] },
     ];
 
     const board = document.getElementById("hierarchyBoard");
@@ -96,6 +99,11 @@ if ("IntersectionObserver" in window) {
             const h3 = document.createElement("h3");
             h3.textContent = rank.label;
             col.appendChild(h3);
+
+            const sub = document.createElement("span");
+            sub.className = "rank-sub";
+            sub.textContent = rank.sub;
+            col.appendChild(sub);
 
             const count = document.createElement("span");
             count.className = "rank-count";

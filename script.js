@@ -1,3 +1,27 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ---------- Konfiguracja Firebase ----------
+const firebaseConfig = {
+    apiKey: "AIzaSyBu05x6c74DtJGF6NRBJBmRu7WFaRk-LWY",
+    authDomain: "soprano-001.firebaseapp.com",
+    projectId: "soprano-001",
+    storageBucket: "soprano-001.firebasestorage.app",
+    messagingSenderId: "675329228049",
+    appId: "1:675329228049:web:237dacd601ccb10291e0b0",
+    measurementId: "G-8J17XKB96M"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const hierarchyDocRef = doc(db, "soprano", "hierarchy");
+
 // Otwarcie kurtyny przy załadowaniu strony
 window.addEventListener("load", () => {
     requestAnimationFrame(() => {
@@ -51,7 +75,8 @@ if ("IntersectionObserver" in window) {
 (() => {
     const EDIT_PASSWORD = "soprano"; // porównanie bez uwzględniania wielkości liter
 
-    // Rangi od najniższej do najwyższej + skład startowy — podmień pod swoją rodzinę
+    // Rangi od najniższej do najwyższej + skład domyślny (używany tylko przy pierwszym
+    // uruchomieniu, zanim cokolwiek istnieje w Firestore)
     const ranks = [
         { id: "novizio", label: "Novizio", sub: "Nowicjusz", members: [] },
         { id: "membro", label: "Membro", sub: "Członek", members: [] },
@@ -76,15 +101,43 @@ if ("IntersectionObserver" in window) {
 
     let editMode = false;
     let selected = null; // { name, from } — osoba zaznaczona stuknięciem, czeka na wybór rangi docelowej
+    let firestoreReady = false; // dopóki nie wczytamy pierwszego stanu, nie zapisujemy niczego
+    let applyingRemoteUpdate = false; // blokada przed nadpisaniem podczas odbierania danych z serwera
 
     function updateHint(){
         if (!editMode){ hint.textContent = ""; return; }
+        if (!firestoreReady){ hint.textContent = "Wczytywanie hierarchii..."; return; }
         hint.textContent = selected
             ? `Zaznaczono: ${selected.name} — kliknij rangę docelową, aby przenieść.`
             : "Kliknij osobę, aby ją zaznaczyć, potem kliknij rangę docelową. Na komputerze możesz też przeciągnąć.";
     }
 
     function findRank(id){ return ranks.find(r => r.id === id); }
+
+    // Zamienia aktualny stan `ranks` na prosty obiekt { rankId: [imiona] } do zapisu w Firestore
+    function ranksToPlainObject(){
+        const obj = {};
+        ranks.forEach(r => { obj[r.id] = r.members; });
+        return obj;
+    }
+
+    // Nadpisuje members w `ranks` na podstawie danych z Firestore
+    function applyPlainObject(data){
+        ranks.forEach(r => {
+            r.members = Array.isArray(data?.[r.id]) ? data[r.id] : [];
+        });
+    }
+
+    // Zapisuje aktualny stan do Firestore (współdzielone dla wszystkich odwiedzających)
+    async function saveToFirestore(){
+        if (!firestoreReady) return;
+        try {
+            await setDoc(hierarchyDocRef, ranksToPlainObject());
+        } catch (err) {
+            console.error("Nie udało się zapisać hierarchii:", err);
+            alert("Nie udało się zapisać zmian na serwerze. Sprawdź połączenie i spróbuj ponownie.");
+        }
+    }
 
     function render(){
         board.innerHTML = "";
@@ -143,6 +196,7 @@ if ("IntersectionObserver" in window) {
                     if (selected && selected.name === name && selected.from === rank.id) selected = null;
                     rank.members = rank.members.filter(m => m !== name);
                     render();
+                    saveToFirestore();
                 });
                 chip.appendChild(removeBtn);
 
@@ -189,6 +243,7 @@ if ("IntersectionObserver" in window) {
                 if (fromRank) fromRank.members = fromRank.members.filter(m => m !== name);
                 rank.members.push(name);
                 render();
+                saveToFirestore();
             });
 
             // Stuknięcie w kolumnę (poza kartą osoby) przenosi zaznaczoną osobę na tę rangę
@@ -198,6 +253,7 @@ if ("IntersectionObserver" in window) {
                     const fromRank = findRank(selected.from);
                     if (fromRank) fromRank.members = fromRank.members.filter(m => m !== selected.name);
                     rank.members.push(selected.name);
+                    saveToFirestore();
                 }
                 selected = null;
                 render();
@@ -255,11 +311,38 @@ if ("IntersectionObserver" in window) {
         newNameInput.value = "";
         render();
         newNameInput.focus();
+        saveToFirestore();
     });
 
     newNameInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") addBtn.click();
     });
 
+    // Pierwsze wczytanie/render z domyślnymi danymi, zanim Firestore odpowie
     render();
+
+    // ---------- Połączenie z Firestore ----------
+    (async () => {
+        try {
+            const snap = await getDoc(hierarchyDocRef);
+            if (!snap.exists()) {
+                // Pierwsze uruchomienie w tym projekcie: zapisz domyślny skład jako punkt wyjścia
+                await setDoc(hierarchyDocRef, ranksToPlainObject());
+            }
+        } catch (err) {
+            console.error("Nie udało się zainicjować hierarchii w Firestore:", err);
+        }
+
+        // Nasłuchuj zmian na żywo — każda osoba widzi aktualizacje innych bez odświeżania strony
+        onSnapshot(hierarchyDocRef, (snap) => {
+            if (!snap.exists()) return;
+            applyingRemoteUpdate = true;
+            applyPlainObject(snap.data());
+            firestoreReady = true;
+            render();
+            applyingRemoteUpdate = false;
+        }, (err) => {
+            console.error("Błąd nasłuchiwania Firestore:", err);
+        });
+    })();
 })();

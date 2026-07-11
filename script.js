@@ -67,16 +67,26 @@ if ("IntersectionObserver" in window) {
     const newNameInput = document.getElementById("newMemberName");
     const newRankSelect = document.getElementById("newMemberRank");
     const addBtn = document.getElementById("addMemberBtn");
+    const hint = document.getElementById("hierarchyHint");
 
     if (!board) return;
 
     let editMode = false;
+    let selected = null; // { name, from } — osoba zaznaczona stuknięciem, czeka na wybór rangi docelowej
+
+    function updateHint(){
+        if (!editMode){ hint.textContent = ""; return; }
+        hint.textContent = selected
+            ? `Zaznaczono: ${selected.name} — kliknij rangę docelową, aby przenieść.`
+            : "Kliknij osobę, aby ją zaznaczyć, potem kliknij rangę docelową. Na komputerze możesz też przeciągnąć.";
+    }
 
     function findRank(id){ return ranks.find(r => r.id === id); }
 
     function render(){
         board.innerHTML = "";
         board.classList.toggle("edit-mode", editMode);
+        board.classList.toggle("has-selection", editMode && !!selected);
 
         ranks.forEach(rank => {
             const col = document.createElement("div");
@@ -105,6 +115,9 @@ if ("IntersectionObserver" in window) {
             rank.members.forEach(name => {
                 const chip = document.createElement("div");
                 chip.className = "member-chip";
+                if (selected && selected.name === name && selected.from === rank.id){
+                    chip.classList.add("selected");
+                }
                 chip.draggable = editMode;
                 chip.dataset.name = name;
 
@@ -117,11 +130,25 @@ if ("IntersectionObserver" in window) {
                 removeBtn.className = "remove-member";
                 removeBtn.setAttribute("aria-label", `Usuń ${name}`);
                 removeBtn.textContent = "×";
-                removeBtn.addEventListener("click", () => {
+                removeBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    if (selected && selected.name === name && selected.from === rank.id) selected = null;
                     rank.members = rank.members.filter(m => m !== name);
                     render();
                 });
                 chip.appendChild(removeBtn);
+
+                // Stuknięcie/klik: zaznacz osobę, albo odznacz jeśli już zaznaczona
+                chip.addEventListener("click", (e) => {
+                    if (!editMode) return;
+                    e.stopPropagation();
+                    if (selected && selected.name === name && selected.from === rank.id){
+                        selected = null;
+                    } else {
+                        selected = { name, from: rank.id };
+                    }
+                    render();
+                });
 
                 chip.addEventListener("dragstart", (e) => {
                     if (!editMode) return;
@@ -156,6 +183,18 @@ if ("IntersectionObserver" in window) {
                 render();
             });
 
+            // Stuknięcie w kolumnę (poza kartą osoby) przenosi zaznaczoną osobę na tę rangę
+            col.addEventListener("click", () => {
+                if (!editMode || !selected) return;
+                if (selected.from !== rank.id){
+                    const fromRank = findRank(selected.from);
+                    if (fromRank) fromRank.members = fromRank.members.filter(m => m !== selected.name);
+                    rank.members.push(selected.name);
+                }
+                selected = null;
+                render();
+            });
+
             board.appendChild(col);
         });
 
@@ -167,11 +206,14 @@ if ("IntersectionObserver" in window) {
             opt.textContent = rank.label;
             newRankSelect.appendChild(opt);
         });
+
+        updateHint();
     }
 
     editToggle.addEventListener("click", () => {
         if (editMode){
             editMode = false;
+            selected = null;
             editToggle.classList.remove("active");
             editToggle.setAttribute("aria-pressed", "false");
             editToggle.querySelector(".edit-toggle-label").textContent = "Edytuj hierarchię";
@@ -184,6 +226,7 @@ if ("IntersectionObserver" in window) {
         if (input === null) return;
         if (input.trim().toLowerCase() === EDIT_PASSWORD){
             editMode = true;
+            selected = null;
             editToggle.classList.add("active");
             editToggle.setAttribute("aria-pressed", "true");
             editToggle.querySelector(".edit-toggle-label").textContent = "Zakończ edycję";
@@ -196,6 +239,7 @@ if ("IntersectionObserver" in window) {
     });
 
     addBtn.addEventListener("click", () => {
+        if (!editMode) return;
         const name = newNameInput.value.trim();
         if (!name) return;
         const rank = findRank(newRankSelect.value) || ranks[ranks.length - 1];

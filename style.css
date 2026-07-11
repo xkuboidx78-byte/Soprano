@@ -486,6 +486,16 @@ footer{
     transition:.3s;
 }
 .add-member-bar button:hover{background:var(--brass-light)}
+.add-member-bar[hidden]{display:none}
+
+.hierarchy-hint{
+    min-height:18px;
+    margin-top:18px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:.05em;
+    color:var(--brass-light);
+}
 
 .hierarchy-board{
     display:flex;
@@ -506,6 +516,8 @@ footer{
     border-color:var(--brass);
     background:rgba(169,128,63,.06);
 }
+.hierarchy-board.has-selection .rank-column{cursor:pointer}
+.hierarchy-board.has-selection .rank-column:hover{border-color:var(--brass)}
 .rank-column h3{
     font-family:var(--font-mono);
     font-size:11px;
@@ -545,6 +557,10 @@ footer{
     border-color:rgba(169,128,63,.4);
 }
 .member-chip.dragging{opacity:.35}
+.member-chip.selected{
+    border-color:var(--brass-light);
+    background:rgba(169,128,63,.16);
+}
 .member-chip .remove-member{
     display:none;
     background:none;

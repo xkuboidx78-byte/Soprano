@@ -1,7 +1,13 @@
+// Otwarcie kurtyny przy załadowaniu strony
+window.addEventListener("load", () => {
+    requestAnimationFrame(() => {
+        setTimeout(() => document.body.classList.add("curtains-open"), 250);
+    });
+});
+
 // Mobilne menu (hamburger)
 const navToggle = document.querySelector(".nav-toggle");
 const nav = document.querySelector("nav");
-
 navToggle?.addEventListener("click", () => {
     const isOpen = nav.classList.toggle("active");
     navToggle.classList.toggle("active");
@@ -17,9 +23,9 @@ nav?.querySelectorAll("a").forEach(link => {
     });
 });
 
-// Przycisk zakupu w sklepie
+// Przycisk rezerwacji sesji
 document.querySelector("#buyBtn")?.addEventListener("click", () => {
-    alert("System płatności wkrótce 🔥");
+    alert("System rezerwacji wkrótce 🔥");
 });
 
 // Płynne pojawianie się sekcji przy scrollowaniu
@@ -35,7 +41,6 @@ if ("IntersectionObserver" in window) {
             }
         });
     }, { threshold: 0.15 });
-
     revealEls.forEach(el => observer.observe(el));
 } else {
     // Fallback dla starszych przeglądarek

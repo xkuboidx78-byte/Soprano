@@ -6,6 +6,7 @@ import {
     setDoc,
     onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // ---------- Konfiguracja Firebase ----------
 const firebaseConfig = {
@@ -20,6 +21,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 const hierarchyDocRef = doc(db, "soprano", "hierarchy");
 
 // Otwarcie kurtyny przy załadowaniu strony
@@ -73,7 +75,7 @@ if ("IntersectionObserver" in window) {
 
 /* ---------- Hierarchia Rodziny ---------- */
 (() => {
-    const EDIT_PASSWORD = "soprano"; // porównanie bez uwzględniania wielkości liter
+    const ADMIN_EMAIL = "edytor@soprano-001.internal"; // musi być identyczny z e-mailem dodanym w Firebase Auth
 
     // Rangi od najniższej do najwyższej. Members startuje ZAWSZE puste —
     // jedynym źródłem prawdy dla składu jest Firestore, nigdy kod strony.
@@ -320,7 +322,7 @@ if ("IntersectionObserver" in window) {
         updateHint();
     }
 
-    editToggle.addEventListener("click", () => {
+    editToggle.addEventListener("click", async () => {
         if (editMode){
             editMode = false;
             selected = null;
@@ -329,12 +331,14 @@ if ("IntersectionObserver" in window) {
             editToggle.querySelector(".edit-toggle-label").textContent = "Edytuj hierarchię";
             editToggle.querySelector(".lock-icon").textContent = "🔒";
             addBar.hidden = true;
+            signOut(auth).catch(() => {});
             render();
             return;
         }
         const input = window.prompt("Podaj hasło, aby edytować hierarchię:");
         if (input === null) return;
-        if (input.trim().toLowerCase() === EDIT_PASSWORD){
+        try {
+            await signInWithEmailAndPassword(auth, ADMIN_EMAIL, input);
             editMode = true;
             selected = null;
             editToggle.classList.add("active");
@@ -343,7 +347,7 @@ if ("IntersectionObserver" in window) {
             editToggle.querySelector(".lock-icon").textContent = "🔓";
             addBar.hidden = false;
             render();
-        } else {
+        } catch (err) {
             alert("Błędne hasło.");
         }
     });

@@ -3,26 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Soprano</title>
+<title>Soprano — Elita. Styl. Dominacja.</title>
+<meta name="description" content="Soprano — zamknięta społeczność stylu i pewności siebie. Dołącz do elity na Discordzie.">
+<link rel="icon" type="image/png" href="logo.png">
 <link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <header class="navbar">
-    <img src="logo.png" class="logo">
-    <nav>
+    <img src="logo.png" class="logo" alt="Soprano">
+    <button class="nav-toggle" aria-label="Otwórz menu" aria-expanded="false" aria-controls="primary-nav">
+        <span></span><span></span><span></span>
+    </button>
+    <nav id="primary-nav">
         <a href="#join">Dołącz</a>
         <a href="#shop">Sklep</a>
         <a href="#gallery">Galeria</a>
         <a href="#rules">Regulamin</a>
-        <a href="https://discord.gg/zVx4R7uMkF" target="_blank" class="discord">Discord</a>
+        <a href="https://discord.gg/zVx4R7uMkF" target="_blank" rel="noopener" class="discord">Discord</a>
     </nav>
 </header>
 
 <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-content">
+        <span class="hero-eyebrow">Zamknięta społeczność</span>
         <h1>SOPRANO</h1>
         <p>Elita. Styl. Dominacja.</p>
         <a href="#join" class="cta">Dołącz do elity</a>
@@ -30,9 +38,10 @@
 </section>
 
 <section id="join" class="section">
+    <span class="eyebrow">Rekrutacja</span>
     <h2>Dołącz do Soprano</h2>
     <div class="cards">
-        <a href="https://discord.gg/zVx4R7uMkF" target="_blank" class="card">
+        <a href="https://discord.gg/zVx4R7uMkF" target="_blank" rel="noopener" class="card">
             <h3>Discord</h3>
             <p>Wejdź do zamkniętej społeczności</p>
         </a>
@@ -44,27 +53,30 @@
 </section>
 
 <section id="shop" class="section dark">
+    <span class="eyebrow">Sklep</span>
     <h2>Sklep</h2>
     <div class="shop">
         <div class="product">
             <h3>Usługa Proroka</h3>
             <span class="price">499 zł</span>
             <p>Poderwie nawet twoją starą. Absolutna kontrola, słowo i styl.</p>
-            <button>Kup usługę</button>
+            <button type="button" id="buyBtn">Kup usługę</button>
         </div>
     </div>
 </section>
 
 <section id="gallery" class="section">
+    <span class="eyebrow">Galeria</span>
     <h2>Galeria</h2>
     <div class="gallery">
-        <img src="img/1.png">
-        <img src="img/2.jpg">
-        <img src="img/3.jpg">
+        <img src="img/1.jpg" alt="Soprano — galeria, zdjęcie 1" loading="lazy">
+        <img src="img/2.jpg" alt="Soprano — galeria, zdjęcie 2" loading="lazy">
+        <img src="img/3.jpg" alt="Soprano — galeria, zdjęcie 3" loading="lazy">
     </div>
 </section>
 
 <section id="rules" class="section dark">
+    <span class="eyebrow">Zasady</span>
     <h2>Regulamin</h2>
     <div class="rules">
         <p>Dołączając do społeczności SOPRANO, akceptujesz wszystkie zasady serwera Discord. Brak szacunku, toksyczność, spam i łamanie regulaminu skutkują sankcjami.</p>
@@ -74,13 +86,6 @@
 <footer>
     © SOPRANO ∞
 </footer>
-
-<script src="script.js"></script>
-</body>
-</html>
-
-
-
 
 <script src="script.js"></script>
 </body>

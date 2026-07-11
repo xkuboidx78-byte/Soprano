@@ -9,16 +9,16 @@
 <link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,600;1,700&family=Manrope:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
 <header class="navbar">
     <img src="logo.png" class="logo" alt="Soprano">
     <button class="nav-toggle" aria-label="Otwórz menu" aria-expanded="false" aria-controls="primary-nav">
         <span></span><span></span><span></span>
     </button>
     <nav id="primary-nav">
+        <a href="#manifest">Manifest</a>
         <a href="#join">Dołącz</a>
         <a href="#shop">Sklep</a>
         <a href="#gallery">Galeria</a>
@@ -29,24 +29,50 @@
 
 <section class="hero">
     <div class="hero-bg"></div>
+    <div class="curtain-panel left" aria-hidden="true"></div>
+    <div class="curtain-panel right" aria-hidden="true"></div>
     <div class="hero-content">
         <span class="hero-eyebrow">Zamknięta społeczność</span>
-        <h1>SOPRANO</h1>
-        <p>Elita. Styl. Dominacja.</p>
+        <h1>Soprano</h1>
+        <p>Elita — Styl — Dominacja</p>
         <a href="#join" class="cta">Dołącz do elity</a>
     </div>
 </section>
 
 <div class="marquee" aria-hidden="true">
     <div class="marquee-track">
-        <span class="marquee-content">ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ </span>
-        <span class="marquee-content">ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ </span>
+        <span class="marquee-content">ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ </span>
+        <span class="marquee-content">ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ ELITA ✦ STYL ✦ DOMINACJA ✦ </span>
     </div>
 </div>
 
-<section id="join" class="section">
+<section id="manifest" class="section">
+    <span class="eyebrow">Manifest</span>
+    <h2>Trzy filary Soprano</h2>
+    <p class="lede">Nie obiecujemy skrótów. Uczymy postawy, która zostaje na dłużej niż jeden wieczór.</p>
+    <div class="manifest-grid">
+        <div class="manifest-item">
+            <span class="num">01</span>
+            <h3>Postawa</h3>
+            <p>Pewność siebie, którą widać zanim się odezwiesz — sposób poruszania się, mówienia, bycia obecnym.</p>
+        </div>
+        <div class="manifest-item">
+            <span class="num">02</span>
+            <h3>Styl</h3>
+            <p>Wizerunek dopracowany od garderoby po detale — spójna wersja siebie, nie kostium na jeden wieczór.</p>
+        </div>
+        <div class="manifest-item">
+            <span class="num">03</span>
+            <h3>Wspólnota</h3>
+            <p>Zamknięte grono, w którym rozmawia się szczerze o ambicjach, porażkach i tym, co dalej.</p>
+        </div>
+    </div>
+</section>
+
+<section id="join" class="section dark">
     <span class="eyebrow">Rekrutacja</span>
     <h2>Dołącz do Soprano</h2>
+    <p class="lede">Wejdź na serwer, poznaj zasady i zajmij swoje miejsce w społeczności.</p>
     <div class="cards">
         <a href="https://discord.gg/zVx4R7uMkF" target="_blank" rel="noopener" class="card">
             <h3>Discord</h3>
@@ -59,20 +85,21 @@
     </div>
 </section>
 
-<section id="shop" class="section dark">
+<section id="shop" class="section">
     <span class="eyebrow">Sklep</span>
-    <h2>Sklep</h2>
+    <h2>Sesja indywidualna</h2>
     <div class="shop">
         <div class="product">
-            <h3>Usługa Proroka</h3>
+            <span class="eyebrow">Usługa Proroka</span>
+            <h3>Konsultacja 1:1</h3>
             <span class="price">499 zł</span>
-            <p>Poderwie nawet twoją starą. Absolutna kontrola, słowo i styl.</p>
-            <button type="button" id="buyBtn">Kup usługę</button>
+            <p>Indywidualna sesja poświęcona stylowi, postawie i pewności siebie — konkretne wskazówki dopasowane do Twoich celów i punktu, w którym teraz jesteś morze ci wyruchac mamę.</p>
+            <button type="button" id="buyBtn">Umów sesję</button>
         </div>
     </div>
 </section>
 
-<section id="gallery" class="section">
+<section id="gallery" class="section dark">
     <span class="eyebrow">Galeria</span>
     <h2>Galeria</h2>
     <div class="gallery">
@@ -82,7 +109,7 @@
     </div>
 </section>
 
-<section id="rules" class="section dark">
+<section id="rules" class="section">
     <span class="eyebrow">Zasady</span>
     <h2>Regulamin</h2>
     <div class="rules">
@@ -91,7 +118,7 @@
 </section>
 
 <footer>
-    © SOPRANO ∞
+    <div class="ornament"><span>SOPRANO ∞</span></div>
 </footer>
 
 <script src="script.js"></script>

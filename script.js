@@ -75,19 +75,29 @@ if ("IntersectionObserver" in window) {
 (() => {
     const EDIT_PASSWORD = "soprano"; // porównanie bez uwzględniania wielkości liter
 
-    // Rangi od najniższej do najwyższej + skład domyślny (używany tylko przy pierwszym
-    // uruchomieniu, zanim cokolwiek istnieje w Firestore)
+    // Rangi od najniższej do najwyższej. Members startuje ZAWSZE puste —
+    // jedynym źródłem prawdy dla składu jest Firestore, nigdy kod strony.
     const ranks = [
         { id: "novizio", label: "Novizio", sub: "Nowicjusz", members: [] },
         { id: "membro", label: "Membro", sub: "Członek", members: [] },
         { id: "membro-permanente", label: "Membro Permanente", sub: "Stały członek", members: [] },
-        { id: "soldato", label: "Soldato", sub: "Żołnierz", members: ["Christopher"] },
-        { id: "caporegime", label: "Caporegime", sub: "Dowódca", members: ["Paulie"] },
+        { id: "soldato", label: "Soldato", sub: "Żołnierz", members: [] },
+        { id: "caporegime", label: "Caporegime", sub: "Dowódca", members: [] },
         { id: "consigliere", label: "Consigliere", sub: "Doradca", members: [] },
-        { id: "braccio-destro", label: "Braccio Destro", sub: "Prawa ręka szefa", members: ["Silvio"] },
+        { id: "braccio-destro", label: "Braccio Destro", sub: "Prawa ręka szefa", members: [] },
         { id: "vice-capo", label: "Vice Capo", sub: "Zastępca szefa", members: [] },
-        { id: "capo", label: "Capo", sub: "Szef", members: ["Tony"] },
+        { id: "capo", label: "Capo", sub: "Szef", members: [] },
     ];
+
+    // Domyślny skład używany WYŁĄCZNIE do jednorazowego zasilenia pustej bazy
+    // (pierwsze uruchomienie nowego projektu Firebase). Nigdy nie jest renderowany
+    // bezpośrednio — trafia do Firestore, a stamtąd wraca przez onSnapshot jak każda inna zmiana.
+    const DEFAULT_MEMBERS = {
+        soldato: ["Christopher"],
+        caporegime: ["Paulie"],
+        "braccio-destro": ["Silvio"],
+        capo: ["Tony"],
+    };
 
     const board = document.getElementById("hierarchyBoard");
     const editToggle = document.getElementById("editToggle");
@@ -101,8 +111,8 @@ if ("IntersectionObserver" in window) {
 
     let editMode = false;
     let selected = null; // { name, from } — osoba zaznaczona stuknięciem, czeka na wybór rangi docelowej
-    let firestoreReady = false; // dopóki nie wczytamy pierwszego stanu, nie zapisujemy niczego
-    let applyingRemoteUpdate = false; // blokada przed nadpisaniem podczas odbierania danych z serwera
+    let firestoreReady = false; // true dopiero po odebraniu PRAWDZIWYCH danych z Firestore
+    let firestoreError = false; // true, jeśli połączenie z bazą się nie powiodło
 
     function updateHint(){
         if (!editMode){ hint.textContent = ""; return; }
@@ -114,10 +124,27 @@ if ("IntersectionObserver" in window) {
 
     function findRank(id){ return ranks.find(r => r.id === id); }
 
+    // Jeśli dane jeszcze się nie wczytały, blokuje akcję i informuje o tym zamiast pozwolić
+    // na edycję, która i tak zostałaby po cichu utracona (saveToFirestore nic by nie zapisał).
+    function ensureReadyOrWarn(){
+        if (!firestoreReady){
+            alert("Dane wciąż się wczytują — spróbuj za chwilę.");
+            return false;
+        }
+        return true;
+    }
+
     // Zamienia aktualny stan `ranks` na prosty obiekt { rankId: [imiona] } do zapisu w Firestore
     function ranksToPlainObject(){
         const obj = {};
         ranks.forEach(r => { obj[r.id] = r.members; });
+        return obj;
+    }
+
+    // To samo co ranksToPlainObject, ale na bazie DEFAULT_MEMBERS — do jednorazowego zasiania bazy
+    function defaultRanksPlainObject(){
+        const obj = {};
+        ranks.forEach(r => { obj[r.id] = DEFAULT_MEMBERS[r.id] || []; });
         return obj;
     }
 
@@ -139,10 +166,34 @@ if ("IntersectionObserver" in window) {
         }
     }
 
+    function renderRankSelectOptions(){
+        newRankSelect.innerHTML = "";
+        ranks.forEach(rank => {
+            const opt = document.createElement("option");
+            opt.value = rank.id;
+            opt.textContent = rank.label;
+            newRankSelect.appendChild(opt);
+        });
+    }
+
     function render(){
         board.innerHTML = "";
         board.classList.toggle("edit-mode", editMode);
         board.classList.toggle("has-selection", editMode && !!selected);
+
+        // Dopóki nie mamy prawdziwych danych z Firestore, nie pokazujemy ŻADNYCH imion —
+        // ani domyślnych, ani starych — tylko jasny komunikat o stanie wczytywania.
+        if (!firestoreReady){
+            const msg = document.createElement("p");
+            msg.style.cssText = "padding:2rem 1rem;text-align:center;opacity:0.7;font-style:italic;";
+            msg.textContent = firestoreError
+                ? "Nie udało się połączyć z serwerem hierarchii. Odśwież stronę lub spróbuj ponownie później."
+                : "Ładowanie hierarchii…";
+            board.appendChild(msg);
+            renderRankSelectOptions();
+            updateHint();
+            return;
+        }
 
         ranks.forEach(rank => {
             const col = document.createElement("div");
@@ -193,6 +244,7 @@ if ("IntersectionObserver" in window) {
                 removeBtn.textContent = "×";
                 removeBtn.addEventListener("click", (e) => {
                     e.stopPropagation();
+                    if (!ensureReadyOrWarn()) return;
                     if (selected && selected.name === name && selected.from === rank.id) selected = null;
                     rank.members = rank.members.filter(m => m !== name);
                     render();
@@ -234,6 +286,7 @@ if ("IntersectionObserver" in window) {
                 if (!editMode) return;
                 e.preventDefault();
                 col.classList.remove("drag-over");
+                if (!ensureReadyOrWarn()) return;
                 let data;
                 try { data = JSON.parse(e.dataTransfer.getData("text/plain")); }
                 catch { return; }
@@ -249,6 +302,7 @@ if ("IntersectionObserver" in window) {
             // Stuknięcie w kolumnę (poza kartą osoby) przenosi zaznaczoną osobę na tę rangę
             col.addEventListener("click", () => {
                 if (!editMode || !selected) return;
+                if (!ensureReadyOrWarn()) return;
                 if (selected.from !== rank.id){
                     const fromRank = findRank(selected.from);
                     if (fromRank) fromRank.members = fromRank.members.filter(m => m !== selected.name);
@@ -262,15 +316,7 @@ if ("IntersectionObserver" in window) {
             board.appendChild(col);
         });
 
-        // odśwież listę rang w formularzu dodawania
-        newRankSelect.innerHTML = "";
-        ranks.forEach(rank => {
-            const opt = document.createElement("option");
-            opt.value = rank.id;
-            opt.textContent = rank.label;
-            newRankSelect.appendChild(opt);
-        });
-
+        renderRankSelectOptions();
         updateHint();
     }
 
@@ -304,6 +350,7 @@ if ("IntersectionObserver" in window) {
 
     addBtn.addEventListener("click", () => {
         if (!editMode) return;
+        if (!ensureReadyOrWarn()) return;
         const name = newNameInput.value.trim();
         if (!name) return;
         const rank = findRank(newRankSelect.value) || ranks[ranks.length - 1];
@@ -318,7 +365,7 @@ if ("IntersectionObserver" in window) {
         if (e.key === "Enter") addBtn.click();
     });
 
-    // Pierwsze wczytanie/render z domyślnymi danymi, zanim Firestore odpowie
+    // Pierwszy render pokazuje TYLKO stan „Ładowanie…" — żadnych domyślnych imion
     render();
 
     // ---------- Połączenie z Firestore ----------
@@ -327,22 +374,25 @@ if ("IntersectionObserver" in window) {
             const snap = await getDoc(hierarchyDocRef);
             if (!snap.exists()) {
                 // Pierwsze uruchomienie w tym projekcie: zapisz domyślny skład jako punkt wyjścia
-                await setDoc(hierarchyDocRef, ranksToPlainObject());
+                await setDoc(hierarchyDocRef, defaultRanksPlainObject());
             }
         } catch (err) {
             console.error("Nie udało się zainicjować hierarchii w Firestore:", err);
+            firestoreError = true;
+            render();
         }
 
         // Nasłuchuj zmian na żywo — każda osoba widzi aktualizacje innych bez odświeżania strony
         onSnapshot(hierarchyDocRef, (snap) => {
             if (!snap.exists()) return;
-            applyingRemoteUpdate = true;
             applyPlainObject(snap.data());
             firestoreReady = true;
+            firestoreError = false;
             render();
-            applyingRemoteUpdate = false;
         }, (err) => {
             console.error("Błąd nasłuchiwania Firestore:", err);
+            firestoreError = true;
+            render();
         });
     })();
 })();

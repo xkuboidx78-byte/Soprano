@@ -21,6 +21,17 @@ body{
     overflow-x:hidden;
 }
 
+/* Subtelne ziarno filmowe — dodaje głębi płaskiej czerni */
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    pointer-events:none;
+    opacity:.045;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
 img{max-width:100%;display:block}
 a{color:inherit}
 
@@ -157,6 +168,36 @@ nav a:hover{color:var(--gold-light)}
     background:var(--gold-light);
     transform:translateY(-3px);
     box-shadow:0 10px 30px rgba(197,157,95,.3);
+}
+
+/* ---------- Marquee ---------- */
+.marquee{
+    overflow:hidden;
+    background:var(--gold);
+    padding:16px 0;
+}
+.marquee-track{
+    display:flex;
+    width:max-content;
+    animation:marquee-scroll 28s linear infinite;
+}
+.marquee:hover .marquee-track{
+    animation-play-state:paused;
+}
+.marquee-content{
+    display:flex;
+    flex-shrink:0;
+    align-items:center;
+    font-family:var(--font-heading);
+    font-size:clamp(15px,2vw,20px);
+    font-weight:600;
+    letter-spacing:3px;
+    color:#000;
+    white-space:nowrap;
+}
+@keyframes marquee-scroll{
+    from{transform:translateX(0)}
+    to{transform:translateX(-50%)}
 }
 
 /* ---------- Sections ---------- */
@@ -328,5 +369,6 @@ button:focus-visible{
 
 @media (prefers-reduced-motion: reduce){
     .reveal{opacity:1 !important;transform:none !important;transition:none !important}
+    .marquee-track{animation:none !important}
     html{scroll-behavior:auto}
 }

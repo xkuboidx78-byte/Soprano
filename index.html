@@ -18,9 +18,11 @@
         <span></span><span></span><span></span>
     </button>
     <nav id="primary-nav">
+        <a href="#announcements">Ogłoszenia</a>
         <a href="#manifest">Manifest</a>
         <a href="#join">Dołącz</a>
         <a href="#hierarchy">Hierarchia</a>
+        <a href="#captures">Capty</a>
         <a href="#shop">Sklep</a>
         <a href="#gallery">Galeria</a>
         <a href="#rules">Regulamin</a>
@@ -47,7 +49,27 @@
     </div>
 </div>
 
-<section id="manifest" class="section">
+<section id="announcements" class="section">
+    <span class="eyebrow">Aktualności</span>
+    <h2>Ogłoszenia</h2>
+    <p class="lede">Najświeższe wiadomości i komunikaty rodziny Soprano.</p>
+
+    <button type="button" id="announcementsEditToggle" class="edit-toggle" aria-pressed="false">
+        <span class="lock-icon" aria-hidden="true">🔒</span>
+        <span class="edit-toggle-label">Edytuj ogłoszenia</span>
+    </button>
+
+    <div id="addAnnouncementBar" class="add-member-bar" hidden>
+        <input type="text" id="newAnnouncementTitle" placeholder="Tytuł ogłoszenia" maxlength="80">
+        <input type="text" id="newAnnouncementText" placeholder="Treść ogłoszenia" maxlength="240">
+        <button type="button" id="addAnnouncementBtn">Dodaj</button>
+    </div>
+
+    <p id="announcementsHint" class="hierarchy-hint" aria-live="polite"></p>
+    <div id="announcementsBoard" class="announcements-board"></div>
+</section>
+
+<section id="manifest" class="section dark">
     <span class="eyebrow">Manifest</span>
     <h2>Trzy filary rodziny</h2>
     <p class="lede">Soprano to rodzina roleplayowa na serwerze <strong>Majestic RP</strong>. Nie obiecujemy skrótów — budujemy pozycję, która zostaje na dłużej niż jedna sesja.</p>
@@ -70,7 +92,7 @@
     </div>
 </section>
 
-<section id="join" class="section dark">
+<section id="join" class="section">
     <span class="eyebrow">Rekrutacja</span>
     <h2>Dołącz do rodziny</h2>
     <p class="lede">Wejdź na serwer Discord, poznaj kodeks rodziny i zajmij swoje miejsce w składzie Majestic RP.</p>
@@ -86,7 +108,7 @@
     </div>
 </section>
 
-<section id="hierarchy" class="section">
+<section id="hierarchy" class="section dark">
     <span class="eyebrow">Struktura</span>
     <h2>Hierarchia Rodziny</h2>
     <p class="lede">Skład rodziny na Majestic RP. W trybie edycji przeciągaj osoby między rangami.</p>
@@ -104,6 +126,27 @@
 
     <p id="hierarchyHint" class="hierarchy-hint" aria-live="polite"></p>
     <div id="hierarchyBoard" class="hierarchy-board"></div>
+</section>
+
+<section id="captures" class="section">
+    <span class="eyebrow">Terytoria</span>
+    <h2>Zapisy na capty</h2>
+    <p class="lede">Zaplanowane capty rodziny — zapisz się przy wybranym terminie, aby wziąć udział. Zapisy są otwarte dla wszystkich, bez hasła.</p>
+
+    <button type="button" id="capturesEditToggle" class="edit-toggle" aria-pressed="false">
+        <span class="lock-icon" aria-hidden="true">🔒</span>
+        <span class="edit-toggle-label">Edytuj capty</span>
+    </button>
+
+    <div id="addCaptureBar" class="add-member-bar" hidden>
+        <input type="text" id="newCaptureTitle" placeholder="Nazwa / lokalizacja capa" maxlength="60">
+        <input type="text" id="newCaptureWhen" placeholder="Data i godzina" maxlength="40">
+        <input type="number" id="newCaptureSlots" placeholder="Limit osób (opcjonalnie)" min="1" max="99">
+        <button type="button" id="addCaptureBtn">Dodaj cap</button>
+    </div>
+
+    <p id="capturesHint" class="hierarchy-hint" aria-live="polite"></p>
+    <div id="capturesBoard" class="captures-board"></div>
 </section>
 
 <section id="shop" class="section dark">

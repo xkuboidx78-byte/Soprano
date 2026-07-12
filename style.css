@@ -588,6 +588,140 @@ footer{
     font-style:italic;
 }
 
+/* ---------- Ogłoszenia ---------- */
+.announcements-board{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    max-width:720px;
+    margin:50px auto 0;
+    text-align:left;
+}
+.announcement-card{
+    position:relative;
+    padding:24px 28px;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-left:2px solid var(--brass);
+    transition:.3s;
+}
+.announcement-card:hover{border-color:var(--brass);border-left-color:var(--brass-light)}
+.announcement-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+}
+.announcement-head h3{
+    font-family:var(--font-display);
+    font-style:italic;
+    font-size:19px;
+    color:var(--ivory);
+}
+.announcement-date{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.15em;
+    color:var(--brass);
+    white-space:nowrap;
+}
+.announcement-card p{color:var(--text-muted);font-size:14px;line-height:1.7}
+.announcement-remove{
+    display:inline-block;
+    margin-top:14px;
+    background:none;
+    border:none;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.1em;
+    color:var(--text-muted);
+    cursor:pointer;
+}
+.announcement-remove:hover{color:var(--brass-light)}
+
+/* ---------- Zapisy na capty ---------- */
+.captures-board{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:26px;
+    max-width:960px;
+    margin:50px auto 0;
+    text-align:left;
+}
+.capture-card{
+    padding:26px 26px 30px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    transition:.3s;
+}
+.capture-card:hover{border-color:var(--brass)}
+.capture-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+}
+.capture-head h3{
+    font-family:var(--font-display);
+    font-style:italic;
+    font-size:19px;
+    color:var(--ivory);
+}
+.capture-when{
+    display:block;
+    margin-top:6px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:.1em;
+    color:var(--brass-light);
+}
+.capture-count{
+    display:block;
+    margin-top:4px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-muted);
+}
+.capture-signups{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-top:16px;
+}
+.capture-signups .member-chip .remove-member{display:inline-block}
+.capture-signup-form{
+    display:flex;
+    gap:8px;
+    margin-top:18px;
+}
+.capture-signup-form input{
+    flex:1;
+    min-width:0;
+    padding:9px 12px;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    color:var(--ivory);
+    font-family:var(--font-body);
+    font-size:13.5px;
+}
+.capture-signup-form input:focus{outline:1px solid var(--brass)}
+.capture-signup-form button{
+    padding:9px 18px;
+    border:1px solid var(--brass);
+    background:transparent;
+    color:var(--brass-light);
+    font-weight:600;
+    letter-spacing:.05em;
+    font-size:13px;
+    cursor:pointer;
+    transition:.3s;
+    white-space:nowrap;
+}
+.capture-signup-form button:hover:not(:disabled){background:var(--brass);color:#150809}
+.capture-signup-form button:disabled{opacity:.4;cursor:not-allowed}
+
 /* ---------- Accessibility ---------- */
 a:focus-visible,
 button:focus-visible{
@@ -627,6 +761,7 @@ button:focus-visible{
     .card{width:100%;max-width:320px}
     .product{padding:36px 26px}
     .gallery img{height:240px}
+    .capture-signup-form{flex-direction:column}
     footer{padding:24px 16px}
 }
 

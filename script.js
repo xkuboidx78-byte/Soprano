@@ -23,6 +23,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const hierarchyDocRef = doc(db, "soprano", "hierarchy");
+const ADMIN_EMAIL = "edytor@soprano-001.internal"; // musi być identyczny z e-mailem dodanym w Firebase Auth
 
 // Otwarcie kurtyny przy załadowaniu strony
 window.addEventListener("load", () => {
@@ -75,8 +76,6 @@ if ("IntersectionObserver" in window) {
 
 /* ---------- Hierarchia Rodziny ---------- */
 (() => {
-    const ADMIN_EMAIL = "edytor@soprano-001.internal"; // musi być identyczny z e-mailem dodanym w Firebase Auth
-
     // Rangi od najniższej do najwyższej. Members startuje ZAWSZE puste —
     // jedynym źródłem prawdy dla składu jest Firestore, nigdy kod strony.
     const ranks = [
@@ -399,4 +398,419 @@ if ("IntersectionObserver" in window) {
             render();
         });
     })();
+})();
+
+/* ---------- Ogłoszenia ---------- */
+(() => {
+    const announcementsDocRef = doc(db, "soprano", "announcements");
+
+    const board = document.getElementById("announcementsBoard");
+    const editToggle = document.getElementById("announcementsEditToggle");
+    const addBar = document.getElementById("addAnnouncementBar");
+    const titleInput = document.getElementById("newAnnouncementTitle");
+    const textInput = document.getElementById("newAnnouncementText");
+    const addBtn = document.getElementById("addAnnouncementBtn");
+    const hint = document.getElementById("announcementsHint");
+
+    if (!board) return;
+
+    let items = [];
+    let editMode = false;
+    let ready = false;
+    let errored = false;
+
+    function updateHint(){
+        if (!editMode){ hint.textContent = ""; return; }
+        hint.textContent = ready ? "Dodaj ogłoszenie poniżej albo usuń istniejące." : "Wczytywanie ogłoszeń...";
+    }
+
+    function newId(){
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    async function save(){
+        if (!ready) return;
+        try {
+            await setDoc(announcementsDocRef, { items });
+        } catch (err) {
+            console.error("Nie udało się zapisać ogłoszeń:", err);
+            alert("Nie udało się zapisać zmian na serwerze. Sprawdź połączenie i spróbuj ponownie.");
+        }
+    }
+
+    function render(){
+        board.innerHTML = "";
+        board.classList.toggle("edit-mode", editMode);
+
+        if (!ready){
+            const msg = document.createElement("p");
+            msg.style.cssText = "padding:2rem 1rem;text-align:center;opacity:0.7;font-style:italic;";
+            msg.textContent = errored
+                ? "Nie udało się połączyć z serwerem ogłoszeń. Odśwież stronę lub spróbuj ponownie później."
+                : "Ładowanie ogłoszeń…";
+            board.appendChild(msg);
+            updateHint();
+            return;
+        }
+
+        if (items.length === 0){
+            const empty = document.createElement("p");
+            empty.className = "rank-empty";
+            empty.style.textAlign = "center";
+            empty.textContent = "— brak ogłoszeń —";
+            board.appendChild(empty);
+        }
+
+        // Najnowsze ogłoszenia na górze
+        items.slice().reverse().forEach(item => {
+            const card = document.createElement("div");
+            card.className = "announcement-card";
+
+            const head = document.createElement("div");
+            head.className = "announcement-head";
+
+            const h3 = document.createElement("h3");
+            h3.textContent = item.title;
+            head.appendChild(h3);
+
+            if (item.date){
+                const date = document.createElement("span");
+                date.className = "announcement-date";
+                date.textContent = item.date;
+                head.appendChild(date);
+            }
+            card.appendChild(head);
+
+            const p = document.createElement("p");
+            p.textContent = item.text;
+            card.appendChild(p);
+
+            if (editMode){
+                const del = document.createElement("button");
+                del.type = "button";
+                del.className = "announcement-remove";
+                del.setAttribute("aria-label", "Usuń ogłoszenie");
+                del.textContent = "× usuń ogłoszenie";
+                del.addEventListener("click", () => {
+                    if (!ready) return;
+                    items = items.filter(i => i.id !== item.id);
+                    render();
+                    save();
+                });
+                card.appendChild(del);
+            }
+
+            board.appendChild(card);
+        });
+
+        updateHint();
+    }
+
+    editToggle.addEventListener("click", async () => {
+        if (editMode){
+            editMode = false;
+            editToggle.classList.remove("active");
+            editToggle.setAttribute("aria-pressed", "false");
+            editToggle.querySelector(".edit-toggle-label").textContent = "Edytuj ogłoszenia";
+            editToggle.querySelector(".lock-icon").textContent = "🔒";
+            addBar.hidden = true;
+            render();
+            return;
+        }
+        const input = window.prompt("Podaj hasło, aby edytować ogłoszenia:");
+        if (input === null) return;
+        try {
+            await signInWithEmailAndPassword(auth, ADMIN_EMAIL, input);
+            editMode = true;
+            editToggle.classList.add("active");
+            editToggle.setAttribute("aria-pressed", "true");
+            editToggle.querySelector(".edit-toggle-label").textContent = "Zakończ edycję";
+            editToggle.querySelector(".lock-icon").textContent = "🔓";
+            addBar.hidden = false;
+            render();
+        } catch (err) {
+            alert("Błędne hasło.");
+        }
+    });
+
+    addBtn.addEventListener("click", () => {
+        if (!editMode || !ready) return;
+        const title = titleInput.value.trim();
+        const text = textInput.value.trim();
+        if (!title || !text) return;
+        items.push({
+            id: newId(),
+            title,
+            text,
+            date: new Date().toLocaleDateString("pl-PL")
+        });
+        titleInput.value = "";
+        textInput.value = "";
+        render();
+        titleInput.focus();
+        save();
+    });
+
+    titleInput.addEventListener("keydown", (e) => { if (e.key === "Enter") textInput.focus(); });
+    textInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addBtn.click(); });
+
+    render();
+
+    onSnapshot(announcementsDocRef, (snap) => {
+        items = Array.isArray(snap.data()?.items) ? snap.data().items : [];
+        ready = true;
+        errored = false;
+        render();
+    }, (err) => {
+        console.error("Błąd nasłuchiwania ogłoszeń:", err);
+        errored = true;
+        render();
+    });
+})();
+
+/* ---------- Zapisy na capty ---------- */
+(() => {
+    const capturesDocRef = doc(db, "soprano", "captures");
+
+    const board = document.getElementById("capturesBoard");
+    const editToggle = document.getElementById("capturesEditToggle");
+    const addBar = document.getElementById("addCaptureBar");
+    const titleInput = document.getElementById("newCaptureTitle");
+    const whenInput = document.getElementById("newCaptureWhen");
+    const slotsInput = document.getElementById("newCaptureSlots");
+    const addBtn = document.getElementById("addCaptureBtn");
+    const hint = document.getElementById("capturesHint");
+
+    if (!board) return;
+
+    let events = [];
+    let editMode = false;
+    let ready = false;
+    let errored = false;
+
+    function updateHint(){
+        if (!editMode){ hint.textContent = ""; return; }
+        hint.textContent = ready ? "Dodaj cap poniżej albo usuń istniejący." : "Wczytywanie captów...";
+    }
+
+    function newId(){
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    async function save(){
+        if (!ready) return;
+        try {
+            await setDoc(capturesDocRef, { events });
+        } catch (err) {
+            console.error("Nie udało się zapisać captów:", err);
+            alert("Nie udało się zapisać zmian na serwerze. Sprawdź połączenie i spróbuj ponownie.");
+        }
+    }
+
+    function render(){
+        board.innerHTML = "";
+        board.classList.toggle("edit-mode", editMode);
+
+        if (!ready){
+            const msg = document.createElement("p");
+            msg.style.cssText = "padding:2rem 1rem;text-align:center;opacity:0.7;font-style:italic;";
+            msg.textContent = errored
+                ? "Nie udało się połączyć z serwerem captów. Odśwież stronę lub spróbuj ponownie później."
+                : "Ładowanie captów…";
+            board.appendChild(msg);
+            updateHint();
+            return;
+        }
+
+        if (events.length === 0){
+            const empty = document.createElement("p");
+            empty.className = "rank-empty";
+            empty.style.textAlign = "center";
+            empty.textContent = "— brak zaplanowanych captów —";
+            board.appendChild(empty);
+        }
+
+        events.forEach(ev => {
+            const card = document.createElement("div");
+            card.className = "capture-card";
+
+            const head = document.createElement("div");
+            head.className = "capture-head";
+
+            const h3 = document.createElement("h3");
+            h3.textContent = ev.title;
+            head.appendChild(h3);
+
+            if (editMode){
+                const del = document.createElement("button");
+                del.type = "button";
+                del.className = "remove-member";
+                del.style.display = "inline-block";
+                del.setAttribute("aria-label", "Usuń cap");
+                del.textContent = "×";
+                del.addEventListener("click", () => {
+                    if (!ready) return;
+                    events = events.filter(e => e.id !== ev.id);
+                    render();
+                    save();
+                });
+                head.appendChild(del);
+            }
+            card.appendChild(head);
+
+            const when = document.createElement("span");
+            when.className = "capture-when";
+            when.textContent = ev.when;
+            card.appendChild(when);
+
+            const count = document.createElement("span");
+            count.className = "capture-count";
+            count.textContent = ev.maxSlots
+                ? `${ev.signups.length} / ${ev.maxSlots} zapisanych`
+                : `${ev.signups.length} zapisanych`;
+            card.appendChild(count);
+
+            const list = document.createElement("div");
+            list.className = "capture-signups";
+
+            if (ev.signups.length === 0){
+                const empty = document.createElement("span");
+                empty.className = "rank-empty";
+                empty.textContent = "— brak zapisów —";
+                list.appendChild(empty);
+            }
+
+            ev.signups.forEach(name => {
+                const chip = document.createElement("div");
+                chip.className = "member-chip";
+
+                const nameSpan = document.createElement("span");
+                nameSpan.textContent = name;
+                chip.appendChild(nameSpan);
+
+                const removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.className = "remove-member";
+                removeBtn.setAttribute("aria-label", `Wypisz ${name}`);
+                removeBtn.textContent = "×";
+                removeBtn.addEventListener("click", () => {
+                    if (!ready) return;
+                    ev.signups = ev.signups.filter(n => n !== name);
+                    render();
+                    save();
+                });
+                chip.appendChild(removeBtn);
+
+                list.appendChild(chip);
+            });
+            card.appendChild(list);
+
+            // Formularz zapisu — dostępny dla każdego, bez hasła
+            const signupForm = document.createElement("div");
+            signupForm.className = "capture-signup-form";
+
+            const signupInput = document.createElement("input");
+            signupInput.type = "text";
+            signupInput.placeholder = "Twoje imię / pseudo";
+            signupInput.maxLength = 40;
+
+            const signupBtn = document.createElement("button");
+            signupBtn.type = "button";
+
+            const full = ev.maxSlots && ev.signups.length >= ev.maxSlots;
+            signupBtn.textContent = full ? "Brak miejsc" : "Zapisz się";
+            signupBtn.disabled = full;
+
+            signupBtn.addEventListener("click", () => {
+                if (!ready) return;
+                const name = signupInput.value.trim();
+                if (!name) return;
+                if (ev.signups.includes(name)){
+                    alert("Już jesteś zapisany/a na ten cap.");
+                    return;
+                }
+                if (ev.maxSlots && ev.signups.length >= ev.maxSlots){
+                    alert("Brak wolnych miejsc na ten cap.");
+                    return;
+                }
+                ev.signups.push(name);
+                signupInput.value = "";
+                render();
+                save();
+            });
+            signupInput.addEventListener("keydown", (e) => { if (e.key === "Enter") signupBtn.click(); });
+
+            signupForm.appendChild(signupInput);
+            signupForm.appendChild(signupBtn);
+            card.appendChild(signupForm);
+
+            board.appendChild(card);
+        });
+
+        updateHint();
+    }
+
+    editToggle.addEventListener("click", async () => {
+        if (editMode){
+            editMode = false;
+            editToggle.classList.remove("active");
+            editToggle.setAttribute("aria-pressed", "false");
+            editToggle.querySelector(".edit-toggle-label").textContent = "Edytuj capty";
+            editToggle.querySelector(".lock-icon").textContent = "🔒";
+            addBar.hidden = true;
+            render();
+            return;
+        }
+        const input = window.prompt("Podaj hasło, aby edytować capty:");
+        if (input === null) return;
+        try {
+            await signInWithEmailAndPassword(auth, ADMIN_EMAIL, input);
+            editMode = true;
+            editToggle.classList.add("active");
+            editToggle.setAttribute("aria-pressed", "true");
+            editToggle.querySelector(".edit-toggle-label").textContent = "Zakończ edycję";
+            editToggle.querySelector(".lock-icon").textContent = "🔓";
+            addBar.hidden = false;
+            render();
+        } catch (err) {
+            alert("Błędne hasło.");
+        }
+    });
+
+    addBtn.addEventListener("click", () => {
+        if (!editMode || !ready) return;
+        const title = titleInput.value.trim();
+        const when = whenInput.value.trim();
+        const rawSlots = slotsInput.value ? parseInt(slotsInput.value, 10) : null;
+        if (!title || !when) return;
+        events.push({
+            id: newId(),
+            title,
+            when,
+            maxSlots: (rawSlots && rawSlots > 0) ? rawSlots : null,
+            signups: []
+        });
+        titleInput.value = "";
+        whenInput.value = "";
+        slotsInput.value = "";
+        render();
+        titleInput.focus();
+        save();
+    });
+
+    titleInput.addEventListener("keydown", (e) => { if (e.key === "Enter") whenInput.focus(); });
+    whenInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addBtn.click(); });
+
+    render();
+
+    onSnapshot(capturesDocRef, (snap) => {
+        events = Array.isArray(snap.data()?.events) ? snap.data().events : [];
+        ready = true;
+        errored = false;
+        render();
+    }, (err) => {
+        console.error("Błąd nasłuchiwania captów:", err);
+        errored = true;
+        render();
+    });
 })();

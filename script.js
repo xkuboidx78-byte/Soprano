@@ -4,7 +4,10 @@ import {
     doc,
     getDoc,
     setDoc,
-    onSnapshot
+    onSnapshot,
+    collection,
+    addDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -812,5 +815,54 @@ if ("IntersectionObserver" in window) {
         console.error("Błąd nasłuchiwania captów:", err);
         errored = true;
         render();
+    });
+})();
+
+/* ---------- Zgłoszenia płatności (widoczne tylko w konsoli Firebase, dla administracji) ---------- */
+(() => {
+    const uidInput = document.getElementById("paymentUid");
+    const nickInput = document.getElementById("paymentNick");
+    const whenInput = document.getElementById("paymentWhen");
+    const submitBtn = document.getElementById("paymentSubmitBtn");
+    const hint = document.getElementById("paymentHint");
+
+    if (!submitBtn) return;
+
+    submitBtn.addEventListener("click", async () => {
+        const uid = uidInput.value.trim();
+        const nick = nickInput.value.trim();
+        const when = whenInput.value.trim();
+
+        if (!uid || !nick || !when) {
+            hint.textContent = "Uzupełnij UID, nick oraz datę wpłaty.";
+            return;
+        }
+
+        submitBtn.disabled = true;
+        hint.textContent = "Wysyłanie...";
+        try {
+            // Zapis do osobnej kolekcji "payments" — reguły Firestore ograniczają
+            // ODCZYT tej kolekcji wyłącznie do zalogowanego konta admina (ADMIN_EMAIL).
+            // Każdy może DODAĆ zgłoszenie, ale nikt poza adminem nie może go odczytać.
+            await addDoc(collection(db, "payments"), {
+                uid,
+                nick,
+                when,
+                submittedAt: serverTimestamp()
+            });
+            uidInput.value = "";
+            nickInput.value = "";
+            whenInput.value = "";
+            hint.textContent = "Dziękujemy! Zgłoszenie zostało zapisane.";
+        } catch (err) {
+            console.error("Nie udało się zapisać zgłoszenia płatności:", err);
+            hint.textContent = "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.";
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+
+    [uidInput, nickInput, whenInput].forEach(input => {
+        input?.addEventListener("keydown", (e) => { if (e.key === "Enter") submitBtn.click(); });
     });
 })();

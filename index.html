@@ -23,7 +23,6 @@
         <a href="#join">Dołącz</a>
         <a href="#hierarchy">Hierarchia</a>
         <a href="#captures">Capty</a>
-        <a href="#payments">Płatności</a>
         <a href="#shop">Sklep</a>
         <a href="#gallery">Galeria</a>
         <a href="#rules">Regulamin</a>
@@ -150,19 +149,73 @@
     <div id="capturesBoard" class="captures-board"></div>
 </section>
 
-<section id="payments" class="section dark">
-    <span class="eyebrow">Płatności</span>
-    <h2>Zgłoś wpłatę</h2>
-    <p class="lede">Jeśli wpłaciłeś/aś pieniądze na rodzinę, zostaw tutaj swój UID, nick oraz datę wpłaty. Zgłoszenie trafia bezpośrednio do administracji rodziny i nie jest widoczne publicznie na stronie.</p>
+<div id="paymentModal" class="payment-modal" hidden>
+    <div class="payment-modal-overlay" id="paymentModalOverlay"></div>
+    <div class="payment-modal-box" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+        <button type="button" class="payment-modal-close" id="paymentModalClose" aria-label="Zamknij">×</button>
+        <span class="eyebrow">Płatności</span>
+        <h2 id="paymentModalTitle">Zgłoś wpłatę</h2>
+        <p class="lede">Umówiłeś/aś sesję i wpłaciłeś/aś pieniądze? Zostaw tutaj swój UID, nick oraz datę wpłaty. Zgłoszenie trafia bezpośrednio do administracji rodziny i nie jest widoczne publicznie na stronie.</p>
 
-    <div class="add-member-bar payment-form">
-        <input type="text" id="paymentUid" placeholder="Twój UID" maxlength="40">
-        <input type="text" id="paymentNick" placeholder="Twój nick" maxlength="40">
-        <input type="text" id="paymentWhen" placeholder="Kiedy wpłaciłeś/aś (data i godzina)" maxlength="40">
-        <button type="button" id="paymentSubmitBtn">Zgłoś wpłatę</button>
+        <div class="add-member-bar payment-form">
+            <input type="text" id="paymentUid" placeholder="Twój UID" maxlength="40">
+            <input type="text" id="paymentNick" placeholder="Twój nick" maxlength="40">
+            <input type="text" id="paymentWhen" placeholder="Kiedy wpłaciłeś/aś (data i godzina)" maxlength="40">
+            <button type="button" id="paymentSubmitBtn">Zgłoś wpłatę</button>
+        </div>
+        <p id="paymentHint" class="hierarchy-hint" aria-live="polite"></p>
     </div>
-    <p id="paymentHint" class="hierarchy-hint" aria-live="polite"></p>
-</section>
+</div>
+
+<style>
+    .payment-modal[hidden]{ display:none; }
+    .payment-modal{
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .payment-modal-overlay{
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.72);
+        backdrop-filter: blur(2px);
+    }
+    .payment-modal-box{
+        position: relative;
+        z-index: 1;
+        max-width: 480px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        background: #12100f;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 12px;
+        padding: 2rem 1.75rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .payment-modal-close{
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: transparent;
+        border: none;
+        color: inherit;
+        font-size: 1.75rem;
+        line-height: 1;
+        cursor: pointer;
+        opacity: 0.7;
+        padding: 0.25rem 0.5rem;
+    }
+    .payment-modal-close:hover{ opacity: 1; }
+    .payment-modal .payment-form{
+        flex-direction: column;
+        align-items: stretch;
+    }
+</style>
 
 <section id="shop" class="section">
     <span class="eyebrow">Sklep</span>

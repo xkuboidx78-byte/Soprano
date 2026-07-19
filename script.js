@@ -53,9 +53,9 @@ nav?.querySelectorAll("a").forEach(link => {
     });
 });
 
-// Przycisk rezerwacji sesji
+// Przycisk rezerwacji sesji — otwiera modal zgłoszenia wpłaty
 document.querySelector("#buyBtn")?.addEventListener("click", () => {
-    alert("System rezerwacji wkrótce 🔥");
+    document.dispatchEvent(new CustomEvent("open-payment-modal"));
 });
 
 // Płynne pojawianie się sekcji przy scrollowaniu
@@ -820,13 +820,35 @@ if ("IntersectionObserver" in window) {
 
 /* ---------- Zgłoszenia płatności (widoczne tylko w konsoli Firebase, dla administracji) ---------- */
 (() => {
+    const modal = document.getElementById("paymentModal");
+    const overlay = document.getElementById("paymentModalOverlay");
+    const closeBtn = document.getElementById("paymentModalClose");
     const uidInput = document.getElementById("paymentUid");
     const nickInput = document.getElementById("paymentNick");
     const whenInput = document.getElementById("paymentWhen");
     const submitBtn = document.getElementById("paymentSubmitBtn");
     const hint = document.getElementById("paymentHint");
 
-    if (!submitBtn) return;
+    if (!submitBtn || !modal) return;
+
+    function openModal(){
+        modal.hidden = false;
+        hint.textContent = "";
+        document.body.style.overflow = "hidden";
+        uidInput.focus();
+    }
+
+    function closeModal(){
+        modal.hidden = true;
+        document.body.style.overflow = "";
+    }
+
+    document.addEventListener("open-payment-modal", openModal);
+    overlay?.addEventListener("click", closeModal);
+    closeBtn?.addEventListener("click", closeModal);
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !modal.hidden) closeModal();
+    });
 
     submitBtn.addEventListener("click", async () => {
         const uid = uidInput.value.trim();
@@ -854,6 +876,7 @@ if ("IntersectionObserver" in window) {
             nickInput.value = "";
             whenInput.value = "";
             hint.textContent = "Dziękujemy! Zgłoszenie zostało zapisane.";
+            setTimeout(closeModal, 1500);
         } catch (err) {
             console.error("Nie udało się zapisać zgłoszenia płatności:", err);
             hint.textContent = "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.";

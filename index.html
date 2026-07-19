@@ -120,6 +120,7 @@
 
     <div id="addMemberBar" class="add-member-bar" hidden>
         <input type="text" id="newMemberName" placeholder="Imię / pseudo" maxlength="40">
+        <input type="text" id="newMemberDiscordId" placeholder="ID Discorda (opcjonalne)" maxlength="25">
         <select id="newMemberRank"></select>
         <button type="button" id="addMemberBtn">Dodaj</button>
     </div>
@@ -214,6 +215,11 @@
     .payment-modal .payment-form{
         flex-direction: column;
         align-items: stretch;
+    }
+    .discord-linked-badge{
+        margin-left: 0.35rem;
+        opacity: 0.8;
+        font-size: 0.85em;
     }
 </style>
 

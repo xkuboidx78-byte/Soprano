@@ -28,6 +28,23 @@ const auth = getAuth(app);
 const hierarchyDocRef = doc(db, "soprano", "hierarchy");
 const ADMIN_EMAIL = "edytor@soprano-001.internal"; // musi być identyczny z e-mailem dodanym w Firebase Auth
 
+// ---------- Powiadomienia na Discord (przez bezpieczną Cloud Function) ----------
+// Wklej tutaj adres URL swojej wdrożonej funkcji notifyDiscord (dostaniesz go po `firebase deploy --only functions`)
+const NOTIFY_FUNCTION_URL = "WKLEJ_TU_ADRES_FUNKCJI";
+
+async function notifyDiscord(message) {
+    if (!NOTIFY_FUNCTION_URL || NOTIFY_FUNCTION_URL.includes("WKLEJ_TU")) return;
+    try {
+        await fetch(NOTIFY_FUNCTION_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+        });
+    } catch (err) {
+        console.error("Nie udało się wysłać powiadomienia na Discord:", err);
+    }
+}
+
 // Otwarcie kurtyny przy załadowaniu strony
 window.addEventListener("load", () => {
     requestAnimationFrame(() => {
@@ -97,16 +114,17 @@ if ("IntersectionObserver" in window) {
     // (pierwsze uruchomienie nowego projektu Firebase). Nigdy nie jest renderowany
     // bezpośrednio — trafia do Firestore, a stamtąd wraca przez onSnapshot jak każda inna zmiana.
     const DEFAULT_MEMBERS = {
-        soldato: ["Christopher"],
-        caporegime: ["Paulie"],
-        "braccio-destro": ["Silvio"],
-        capo: ["Tony"],
+        soldato: [{ name: "Christopher", discordId: "" }],
+        caporegime: [{ name: "Paulie", discordId: "" }],
+        "braccio-destro": [{ name: "Silvio", discordId: "" }],
+        capo: [{ name: "Tony", discordId: "" }],
     };
 
     const board = document.getElementById("hierarchyBoard");
     const editToggle = document.getElementById("editToggle");
     const addBar = document.getElementById("addMemberBar");
     const newNameInput = document.getElementById("newMemberName");
+    const newDiscordIdInput = document.getElementById("newMemberDiscordId");
     const newRankSelect = document.getElementById("newMemberRank");
     const addBtn = document.getElementById("addMemberBtn");
     const hint = document.getElementById("hierarchyHint");
@@ -114,7 +132,7 @@ if ("IntersectionObserver" in window) {
     if (!board) return;
 
     let editMode = false;
-    let selected = null; // { name, from } — osoba zaznaczona stuknięciem, czeka na wybór rangi docelowej
+    let selected = null; // { name, discordId, from } — osoba zaznaczona stuknięciem, czeka na wybór rangi docelowej
     let firestoreReady = false; // true dopiero po odebraniu PRAWDZIWYCH danych z Firestore
     let firestoreError = false; // true, jeśli połączenie z bazą się nie powiodło
 
@@ -128,6 +146,11 @@ if ("IntersectionObserver" in window) {
 
     function findRank(id){ return ranks.find(r => r.id === id); }
 
+    // Sprawdza czy dana osoba w tablicy members to ta sama osoba co (name, discordId)
+    function sameMember(m, name, discordId){
+        return m.name === name && (m.discordId || "") === (discordId || "");
+    }
+
     // Jeśli dane jeszcze się nie wczytały, blokuje akcję i informuje o tym zamiast pozwolić
     // na edycję, która i tak zostałaby po cichu utracona (saveToFirestore nic by nie zapisał).
     function ensureReadyOrWarn(){
@@ -138,7 +161,7 @@ if ("IntersectionObserver" in window) {
         return true;
     }
 
-    // Zamienia aktualny stan `ranks` na prosty obiekt { rankId: [imiona] } do zapisu w Firestore
+    // Zamienia aktualny stan `ranks` na prosty obiekt { rankId: [{name, discordId}] } do zapisu w Firestore
     function ranksToPlainObject(){
         const obj = {};
         ranks.forEach(r => { obj[r.id] = r.members; });
@@ -152,10 +175,13 @@ if ("IntersectionObserver" in window) {
         return obj;
     }
 
-    // Nadpisuje members w `ranks` na podstawie danych z Firestore
+    // Nadpisuje members w `ranks` na podstawie danych z Firestore.
+    // Wsteczna kompatybilność: jeśli w bazie są jeszcze same stringi (sprzed zmiany),
+    // zamienia je na {name, discordId: ""} zamiast się wywalić.
     function applyPlainObject(data){
         ranks.forEach(r => {
-            r.members = Array.isArray(data?.[r.id]) ? data[r.id] : [];
+            const raw = Array.isArray(data?.[r.id]) ? data[r.id] : [];
+            r.members = raw.map(m => typeof m === "string" ? { name: m, discordId: "" } : { name: m.name || "", discordId: m.discordId || "" });
         });
     }
 
@@ -228,18 +254,29 @@ if ("IntersectionObserver" in window) {
                 list.appendChild(empty);
             }
 
-            rank.members.forEach(name => {
+            rank.members.forEach(member => {
+                const { name, discordId } = member;
                 const chip = document.createElement("div");
                 chip.className = "member-chip";
-                if (selected && selected.name === name && selected.from === rank.id){
+                if (selected && sameMember(member, selected.name, selected.discordId) && selected.from === rank.id){
                     chip.classList.add("selected");
                 }
                 chip.draggable = editMode;
                 chip.dataset.name = name;
+                if (discordId) chip.dataset.discordId = discordId;
+                chip.title = discordId ? `Discord ID: ${discordId}` : "Brak podpiętego ID Discorda";
 
                 const nameSpan = document.createElement("span");
                 nameSpan.textContent = name;
                 chip.appendChild(nameSpan);
+
+                if (discordId){
+                    const badge = document.createElement("span");
+                    badge.className = "discord-linked-badge";
+                    badge.textContent = "🔗";
+                    badge.setAttribute("aria-hidden", "true");
+                    chip.appendChild(badge);
+                }
 
                 const removeBtn = document.createElement("button");
                 removeBtn.type = "button";
@@ -249,10 +286,11 @@ if ("IntersectionObserver" in window) {
                 removeBtn.addEventListener("click", (e) => {
                     e.stopPropagation();
                     if (!ensureReadyOrWarn()) return;
-                    if (selected && selected.name === name && selected.from === rank.id) selected = null;
-                    rank.members = rank.members.filter(m => m !== name);
+                    if (selected && sameMember(member, selected.name, selected.discordId) && selected.from === rank.id) selected = null;
+                    rank.members = rank.members.filter(m => m !== member);
                     render();
                     saveToFirestore();
+                    notifyDiscord(`👑 **${name}** usunięty/a z hierarchii (ranga: ${rank.label})`);
                 });
                 chip.appendChild(removeBtn);
 
@@ -260,17 +298,17 @@ if ("IntersectionObserver" in window) {
                 chip.addEventListener("click", (e) => {
                     if (!editMode) return;
                     e.stopPropagation();
-                    if (selected && selected.name === name && selected.from === rank.id){
+                    if (selected && sameMember(member, selected.name, selected.discordId) && selected.from === rank.id){
                         selected = null;
                     } else {
-                        selected = { name, from: rank.id };
+                        selected = { name, discordId, from: rank.id };
                     }
                     render();
                 });
 
                 chip.addEventListener("dragstart", (e) => {
                     if (!editMode) return;
-                    e.dataTransfer.setData("text/plain", JSON.stringify({ name, from: rank.id }));
+                    e.dataTransfer.setData("text/plain", JSON.stringify({ name, discordId, from: rank.id }));
                     chip.classList.add("dragging");
                 });
                 chip.addEventListener("dragend", () => chip.classList.remove("dragging"));
@@ -294,13 +332,14 @@ if ("IntersectionObserver" in window) {
                 let data;
                 try { data = JSON.parse(e.dataTransfer.getData("text/plain")); }
                 catch { return; }
-                const { name, from } = data;
+                const { name, discordId, from } = data;
                 if (from === rank.id) return;
                 const fromRank = findRank(from);
-                if (fromRank) fromRank.members = fromRank.members.filter(m => m !== name);
-                rank.members.push(name);
+                if (fromRank) fromRank.members = fromRank.members.filter(m => !sameMember(m, name, discordId));
+                rank.members.push({ name, discordId });
                 render();
                 saveToFirestore();
+                notifyDiscord(`👑 **${name}** przeniesiony/a do rangi **${rank.label}**`);
             });
 
             // Stuknięcie w kolumnę (poza kartą osoby) przenosi zaznaczoną osobę na tę rangę
@@ -309,9 +348,10 @@ if ("IntersectionObserver" in window) {
                 if (!ensureReadyOrWarn()) return;
                 if (selected.from !== rank.id){
                     const fromRank = findRank(selected.from);
-                    if (fromRank) fromRank.members = fromRank.members.filter(m => m !== selected.name);
-                    rank.members.push(selected.name);
+                    if (fromRank) fromRank.members = fromRank.members.filter(m => !sameMember(m, selected.name, selected.discordId));
+                    rank.members.push({ name: selected.name, discordId: selected.discordId });
                     saveToFirestore();
+                    notifyDiscord(`👑 **${selected.name}** przeniesiony/a do rangi **${rank.label}**`);
                 }
                 selected = null;
                 render();
@@ -359,15 +399,21 @@ if ("IntersectionObserver" in window) {
         if (!ensureReadyOrWarn()) return;
         const name = newNameInput.value.trim();
         if (!name) return;
+        const discordId = newDiscordIdInput ? newDiscordIdInput.value.trim() : "";
         const rank = findRank(newRankSelect.value) || ranks[ranks.length - 1];
-        rank.members.push(name);
+        rank.members.push({ name, discordId });
         newNameInput.value = "";
+        if (newDiscordIdInput) newDiscordIdInput.value = "";
         render();
         newNameInput.focus();
         saveToFirestore();
+        notifyDiscord(`👑 **${name}** dołączył/a do rangi **${rank.label}**`);
     });
 
     newNameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") (newDiscordIdInput ? newDiscordIdInput.focus() : addBtn.click());
+    });
+    newDiscordIdInput?.addEventListener("keydown", (e) => {
         if (e.key === "Enter") addBtn.click();
     });
 
@@ -552,6 +598,7 @@ if ("IntersectionObserver" in window) {
         render();
         titleInput.focus();
         save();
+        notifyDiscord(`📢 **Nowe ogłoszenie:** ${title}\n${text}`);
     });
 
     titleInput.addEventListener("keydown", (e) => { if (e.key === "Enter") textInput.focus(); });
@@ -740,6 +787,7 @@ if ("IntersectionObserver" in window) {
                 signupInput.value = "";
                 render();
                 save();
+                notifyDiscord(`📝 **${name}** zapisał/a się na cap: **${ev.title}** (${ev.when})`);
             });
             signupInput.addEventListener("keydown", (e) => { if (e.key === "Enter") signupBtn.click(); });
 
@@ -876,6 +924,7 @@ if ("IntersectionObserver" in window) {
             nickInput.value = "";
             whenInput.value = "";
             hint.textContent = "Dziękujemy! Zgłoszenie zostało zapisane.";
+            notifyDiscord(`💰 **Zgłoszenie wpłaty:** ${nick} (UID: ${uid}) — ${when}`);
             setTimeout(closeModal, 1500);
         } catch (err) {
             console.error("Nie udało się zapisać zgłoszenia płatności:", err);

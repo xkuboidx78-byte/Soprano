@@ -23,6 +23,7 @@
         <a href="#join">Dołącz</a>
         <a href="#hierarchy">Hierarchia</a>
         <a href="#captures">Capty</a>
+        <a href="#payments">Płatności</a>
         <a href="#shop">Sklep</a>
         <a href="#gallery">Galeria</a>
         <a href="#rules">Regulamin</a>
@@ -149,7 +150,21 @@
     <div id="capturesBoard" class="captures-board"></div>
 </section>
 
-<section id="shop" class="section dark">
+<section id="payments" class="section dark">
+    <span class="eyebrow">Płatności</span>
+    <h2>Zgłoś wpłatę</h2>
+    <p class="lede">Jeśli wpłaciłeś/aś pieniądze na rodzinę, zostaw tutaj swój UID, nick oraz datę wpłaty. Zgłoszenie trafia bezpośrednio do administracji rodziny i nie jest widoczne publicznie na stronie.</p>
+
+    <div class="add-member-bar payment-form">
+        <input type="text" id="paymentUid" placeholder="Twój UID" maxlength="40">
+        <input type="text" id="paymentNick" placeholder="Twój nick" maxlength="40">
+        <input type="text" id="paymentWhen" placeholder="Kiedy wpłaciłeś/aś (data i godzina)" maxlength="40">
+        <button type="button" id="paymentSubmitBtn">Zgłoś wpłatę</button>
+    </div>
+    <p id="paymentHint" class="hierarchy-hint" aria-live="polite"></p>
+</section>
+
+<section id="shop" class="section">
     <span class="eyebrow">Sklep</span>
     <h2>Usługi rodziny</h2>
     <div class="shop">
@@ -163,7 +178,7 @@
     </div>
 </section>
 
-<section id="gallery" class="section">
+<section id="gallery" class="section dark">
     <span class="eyebrow">Galeria</span>
     <h2>Galeria</h2>
     <div class="gallery">
@@ -173,7 +188,7 @@
     </div>
 </section>
 
-<section id="rules" class="section dark">
+<section id="rules" class="section">
     <span class="eyebrow">Zasady</span>
     <h2>Kodeks Rodziny</h2>
     <div class="rules">

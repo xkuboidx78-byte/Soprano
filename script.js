@@ -99,14 +99,15 @@ if ("IntersectionObserver" in window) {
     // Rangi od najniższej do najwyższej. Members startuje ZAWSZE puste —
     // jedynym źródłem prawdy dla składu jest Firestore, nigdy kod strony.
     const ranks = [
-        { id: "novizio", label: "Novizio", sub: "Nowicjusz", members: [] },
+        { id: "recluta", label: "Recluta", sub: "Rekrut", members: [] },
         { id: "membro", label: "Membro", sub: "Członek", members: [] },
-        { id: "membro-permanente", label: "Membro Permanente", sub: "Stały członek", members: [] },
         { id: "soldato", label: "Soldato", sub: "Żołnierz", members: [] },
-        { id: "caporegime", label: "Caporegime", sub: "Dowódca", members: [] },
-        { id: "consigliere", label: "Consigliere", sub: "Doradca", members: [] },
-        { id: "braccio-destro", label: "Braccio Destro", sub: "Prawa ręka szefa", members: [] },
-        { id: "vice-capo", label: "Vice Capo", sub: "Zastępca szefa", members: [] },
+        { id: "membro-esperto", label: "Membro Esperto", sub: "Doświadczony członek", members: [] },
+        { id: "veterano", label: "Veterano", sub: "Weteran", members: [] },
+        { id: "operativo", label: "Operativo", sub: "Operatywny", members: [] },
+        { id: "capitano", label: "Capitano (Caposquadra)", sub: "Kapitan / Dowódca oddziału", members: [] },
+        { id: "consulente", label: "Consulente", sub: "Doradca", members: [] },
+        { id: "braccio-destro-del-capo", label: "Braccio Destro del Capo", sub: "Prawa ręka szefa", members: [] },
         { id: "capo", label: "Capo", sub: "Szef", members: [] },
     ];
 
@@ -115,8 +116,8 @@ if ("IntersectionObserver" in window) {
     // bezpośrednio — trafia do Firestore, a stamtąd wraca przez onSnapshot jak każda inna zmiana.
     const DEFAULT_MEMBERS = {
         soldato: [{ name: "Christopher", discordId: "" }],
-        caporegime: [{ name: "Paulie", discordId: "" }],
-        "braccio-destro": [{ name: "Silvio", discordId: "" }],
+        capitano: [{ name: "Paulie", discordId: "" }],
+        "braccio-destro-del-capo": [{ name: "Silvio", discordId: "" }],
         capo: [{ name: "Tony", discordId: "" }],
     };
 

@@ -105,9 +105,8 @@ if ("IntersectionObserver" in window) {
         { id: "membro-esperto", label: "Membro Esperto", sub: "Doświadczony członek", members: [] },
         { id: "veterano", label: "Veterano", sub: "Weteran", members: [] },
         { id: "operativo", label: "Operativo", sub: "Operatywny", members: [] },
-        { id: "capitano", label: "Capitano (Caposquadra)", sub: "Kapitan / Dowódca oddziału", members: [] },
         { id: "consulente", label: "Consulente", sub: "Doradca", members: [] },
-        { id: "braccio-destro-del-capo", label: "Braccio Destro del Capo", sub: "Prawa ręka szefa", members: [] },
+        { id: "vicepreside", label: "Vicepreside", sub: "Zastępca szefa", members: [] },
         { id: "capo", label: "Capo", sub: "Szef", members: [] },
     ];
 
@@ -116,8 +115,7 @@ if ("IntersectionObserver" in window) {
     // bezpośrednio — trafia do Firestore, a stamtąd wraca przez onSnapshot jak każda inna zmiana.
     const DEFAULT_MEMBERS = {
         soldato: [{ name: "Christopher", discordId: "" }],
-        capitano: [{ name: "Paulie", discordId: "" }],
-        "braccio-destro-del-capo": [{ name: "Silvio", discordId: "" }],
+        vicepreside: [{ name: "Silvio", discordId: "" }],
         capo: [{ name: "Tony", discordId: "" }],
     };
 
